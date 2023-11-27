@@ -1,0 +1,118 @@
+
+local enc = {}
+
+enc.rand_arr = {}
+enc.rand_counter = 1
+enc.rand_size = 128 * 4
+enc.iterations = 0
+
+enc.get_rand = function() 
+    local ret = enc.rand_arr[enc.rand_counter]
+    enc.rand_counter = enc.rand_counter + 1
+    if enc.rand_counter > enc.rand_size then
+        enc.rand_counter = 1
+    end
+    return ret
+end
+
+enc.split_string = function(inputstr, sep)
+    if sep == nil then
+            sep = "%s"
+    end
+
+    local t={}
+    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+            table.insert(t, tonumber(str))
+    end
+    return t
+end
+
+enc.is_acceptable = function(nums) 
+    local function isUpperCaseAscii(number)
+		return number >= 65 and number <= 90
+    end
+
+    local function isLowerCaseAscii(number)
+		return number >= 97 and number <= 122
+    end
+
+    local function is_viable_part(number)
+		return isUpperCaseAscii(number) or isLowerCaseAscii(number)
+    end
+	    
+	local matches = 4
+	    
+	if not is_viable_part(nums[1]) then
+    	print("1 was not okay!: ",nums[1])
+    	matches = matches -1
+	end
+	
+	if not is_viable_part(nums[2]) then
+		print("2 was not okay!: ",nums[2])
+		matches = matches -1
+	end
+	
+	if not is_viable_part(nums[3]) then
+		print("3 was not okay!: ",nums[3])
+		matches = matches -1
+	end
+	
+	if not is_viable_part(nums[4]) then
+		print("4 was not okay!: ",nums[4])
+		matches = matches -1
+	end
+	
+	print("End of iteration: ",matches, " Matches!")
+	    
+	return is_viable_part(nums[1]) and is_viable_part(nums[2]) and is_viable_part(nums[3]) and is_viable_part(nums[4]) 
+end
+
+enc.mut_nums = function(n1, n2, n3, n4)
+    local function wrap_num(num, lower_lim, upper_lim)
+    if num > upper_lim then
+		num = num - (upper_lim - lower_lim + 1)
+    end
+	    
+    if num < lower_lim then
+		num = num + (upper_lim - lower_lim + 1)
+    end
+
+	    return num
+	end
+
+
+    n1 = wrap_num(n1 + enc.get_rand(), 0, 255)
+    n2 = wrap_num(n2 + enc.get_rand(), 0, 255)
+    n3 = wrap_num(n3 + enc.get_rand(), 0, 255)
+    n4 = wrap_num(n4 + enc.get_rand(), 0, 255)
+
+    return {n1, n2, n3, n4}
+end
+
+enc.encode = function(address,seed) 
+	math.randomseed(seed)
+
+	for i=1,enc.rand_size do
+		enc.rand_arr[i] = (math.random(1,255))
+	end
+
+	local numbers = enc.split_string(address,".")
+
+	while not enc.is_acceptable(numbers) do
+	    numbers = enc.mut_nums(numbers[1], numbers[2], numbers[3], numbers[4])
+	    enc.iterations = enc.iterations + 1
+	    print("Iteration:", enc.iterations)
+	end
+
+	for i = 1, #numbers do
+	    print(numbers[i])
+	    print(string.char(numbers[i]))
+	    print("")
+	end
+
+	print("Found after " .. enc.iterations .. " Iterations!")
+
+	return string.char(numbers[1])..string.char(numbers[2])..string.char(numbers[3])..string.char(numbers[4])..enc.iterations
+end
+
+return enc
